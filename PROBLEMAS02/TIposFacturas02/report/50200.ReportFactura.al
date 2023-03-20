@@ -7,8 +7,9 @@ report 50200 "C2 Report Factura"
 
     dataset
     {
-        dataitem(SH; "Sales Header")
+        dataitem(SIH; "Sales Invoice Header")
         {
+
             column(Sell_to_Customer_Name; "Sell-to Customer Name") { }
             column(Sell_to_Customer_No_; "Sell-to Customer No.") { }
             column(Bill_to_Address; "Bill-to Address") { }
@@ -18,17 +19,20 @@ report 50200 "C2 Report Factura"
             column(Salesperson_Code; "Salesperson Code") { }
             column(Order_Date; "Order Date") { }
             column(Sell_to_Phone_No_; "Sell-to Phone No.") { }
+            column(No__Series; "No. Series") { }
+            column(salesperson; salesperson) { }
+            column(Amount_Including_VAT; "Amount Including VAT") { }
 
 
-            dataitem(SL; "Sales Line")
+
+
+            dataitem(SIL; "Sales Invoice Line")
             {
-                DataItemLinkReference = SH;
+                DataItemLinkReference = SIH;
                 DataItemLink = "Document No." = field("No.");
 
                 column(Amount; Amount) { }
-                column(Amount_Including_VAT; "Amount Including VAT") { }
                 column(VAT_Base_Amount; "VAT Base Amount") { }
-
                 column(Unit_Price; "Unit Price") { }
                 column(Description; Description) { }
                 column(LineNo; "No.") { }
@@ -36,22 +40,36 @@ report 50200 "C2 Report Factura"
 
 
 
+
                 dataitem(C; Customer)
                 {
-                    DataItemLinkReference = SH;
+                    DataItemLinkReference = SIH;
                     DataItemLink = "No." = field("Sell-to Customer No.");
 
-                    column(C2TaxPayerClassification; C2TaxPayerClassification)
-                    {
-
-                    }
+                    column(C2TaxPayerClassification; C2TaxPayerClassification) { }
                     column(Name; Name) { }
+
+
                 }
 
             }
 
+            trigger OnAfterGetRecord()
+            var
+                SP: Record "Salesperson/Purchaser";
+            begin
+                sp.Reset();
+                if (SP.Get("Salesperson Code")) then
+                    salesperson := SP.Name else
+                    salesperson := '***';
 
+            end;
 
+            trigger OnPreDataItem()
+            begin
+                SIH.Reset();
+                SIH.SetFilter("No.", mycode);
+            end;
 
         }
     }
@@ -64,10 +82,11 @@ report 50200 "C2 Report Factura"
             {
                 group(GroupName)
                 {
-                    field(dc; myInt)
+                    field(mycode; mycode)
                     {
-
-                        TableRelation = "Sales Header"."No.";
+                        ApplicationArea = All;
+                        Caption = 'Codigo Factura';
+                        TableRelation = "Sales Invoice Header"."No.";
                     }
                 }
 
@@ -98,6 +117,7 @@ report 50200 "C2 Report Factura"
     end;
 
     var
-        myInt: Code[20];
+        salesperson: Text[50];
+        mycode: Code[20];
 
 }
