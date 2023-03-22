@@ -40,7 +40,7 @@ report 50201 "C2 Report Kardex"
 
                     end;
                     ILE.SetFilter("Posting Date", '>=%1', fehcaInicial);
-
+                    cantidad := ILE.Count();
                 end;
 
             }
@@ -49,21 +49,29 @@ report 50201 "C2 Report Kardex"
 
             trigger OnPreDataItem()
             var
-                Attribute: Record "Item Attribute Value Selection";
+
             begin
                 Item.Reset();
                 Item.SetFilter("No.", ItemCode);
-                Attribute.SetFilter("Attribute Name", 'Depth');
-                Attribute.SetFilter("Inherited-From Key Value", ItemCode);
-                Attribute.SetFilter("Inherited-From Table ID", '27');
+
+
+
+            end;
+
+            trigger OnAfterGetRecord()
+            var
+                mapping: Record "Item Attribute Value Mapping";
+                Attribute: Record "Item Attribute Value";
+            begin
+                mapping.SetFilter("Table ID", '27');
+                mapping.SetFilter("No.", ItemCode);
+
+
 
                 if Attribute.FindSet() then begin
                     Evaluate(volumen, Attribute.Value);
 
                 end;
-
-
-
             end;
 
 
@@ -148,5 +156,6 @@ report 50201 "C2 Report Kardex"
         fehcaInicial: Date;
         bodegaCode: Code[20];
         volumen: decimal;
+        cantidad: Integer;
 
 }
