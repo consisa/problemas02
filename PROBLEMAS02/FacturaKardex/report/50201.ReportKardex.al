@@ -29,7 +29,6 @@ report 50201 "C2 Report Kardex"
                 trigger OnPreDataItem()
                 var
                     myInt: Integer;
-                    xd: Record "Item Attribute Value";
                 begin
                     ILE.SetFilter("Location Code", bodegaCode);
                     ILE.SetFilter("Posting Date", '<%1', fehcaInicial);
@@ -40,7 +39,13 @@ report 50201 "C2 Report Kardex"
 
                     end;
                     ILE.SetFilter("Posting Date", '>=%1', fehcaInicial);
-                    cantidad := ILE.Count();
+                    if ILE.FindSet() then begin
+                        ILE.CalcSums(Quantity);
+                        cantidad := ILE.Quantity;
+                        volumen := cantidad * width * depth * height;
+                    end;
+
+
                 end;
 
             }
@@ -53,9 +58,6 @@ report 50201 "C2 Report Kardex"
             begin
                 Item.Reset();
                 Item.SetFilter("No.", ItemCode);
-
-
-
             end;
 
             trigger OnAfterGetRecord()
@@ -63,15 +65,50 @@ report 50201 "C2 Report Kardex"
                 mapping: Record "Item Attribute Value Mapping";
                 Attribute: Record "Item Attribute Value";
             begin
-                mapping.SetFilter("Table ID", '27');
-                mapping.SetFilter("No.", ItemCode);
-
-
-
-                if Attribute.FindSet() then begin
-                    Evaluate(volumen, Attribute.Value);
+                mapping.Reset();
+                mapping.SetRange("Table ID", 27);
+                mapping.SetRange("No.", ItemCode);
+                mapping.SetRange("Item Attribute ID", 2);
+                if mapping.FindFirst() then begin
+                    Attribute.Reset();
+                    Attribute.SetRange("Attribute ID", 2);
+                    Attribute.SetRange(ID, mapping."Item Attribute Value ID");
+                    if Attribute.FindFirst() then begin
+                        depth := Attribute."Numeric Value";
+                    end;
 
                 end;
+                mapping.Reset();
+                mapping.SetRange("Table ID", 27);
+                mapping.SetRange("No.", ItemCode);
+                mapping.SetRange("Item Attribute ID", 3);
+                if mapping.FindFirst() then begin
+                    Attribute.Reset();
+                    Attribute.SetRange("Attribute ID", 3);
+                    Attribute.SetRange(ID, mapping."Item Attribute Value ID");
+                    if Attribute.FindFirst() then begin
+                        height := Attribute."Numeric Value";
+                    end;
+
+                end;
+                mapping.Reset();
+                mapping.SetRange("Table ID", 27);
+                mapping.SetRange("No.", ItemCode);
+                mapping.SetRange("Item Attribute ID", 4);
+                if mapping.FindFirst() then begin
+                    Attribute.Reset();
+                    Attribute.SetRange("Attribute ID", 4);
+                    Attribute.SetRange(ID, mapping."Item Attribute Value ID");
+                    if Attribute.FindFirst() then begin
+                        width := Attribute."Numeric Value";
+                    end;
+
+                end;
+
+
+
+
+
             end;
 
 
@@ -98,7 +135,7 @@ report 50201 "C2 Report Kardex"
                         var
                         begin
                             if ItemCode = '' then
-                                Error('xd');
+                                Error('error');
                         end;
                     }
                     field(FechaInicial; fehcaInicial)
@@ -136,9 +173,7 @@ report 50201 "C2 Report Kardex"
     var
 
     begin
-        fehcaInicial := 20230130D;
-        ItemCode := '1001';
-        bodegaCode := 'BLUE';
+
     end;
 
     trigger OnPreReport()
@@ -155,7 +190,11 @@ report 50201 "C2 Report Kardex"
         SaldoInicial: Decimal;
         fehcaInicial: Date;
         bodegaCode: Code[20];
-        volumen: decimal;
-        cantidad: Integer;
+        volumen: Decimal;
+        cantidad: Decimal;
+        width: Decimal;
+        height: Decimal;
+        depth: Decimal;
+
 
 }
