@@ -38,10 +38,12 @@ report 50201 "C2 Report Kardex"
 
 
                     end;
+                    //ILE.Reset();
+                    ILE.SetFilter("Location Code", bodegaCode);
                     ILE.SetFilter("Posting Date", '>=%1', fehcaInicial);
                     if ILE.FindSet() then begin
                         ILE.CalcSums(Quantity);
-                        cantidad := ILE.Quantity;
+                        cantidad := ILE.Quantity + SaldoInicial;
                         volumen := cantidad * width * depth * height;
                     end;
 
